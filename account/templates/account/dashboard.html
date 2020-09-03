@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %} Dashboard {% endblock %}
+{% block content %}
+    <h1>Dashboard</h1>
+    <!--the dashboard now displays the total number of images bookmarked by the user,we use template tag to set a variable with total number of images bookmarked by the current user -->
+
+    {% with total_images_created=request.user.images_created.count %} <!--here 'image' is model name and 'created' is attribute of this model,so 'images_created' define the images which one created by a user and count it, and store it to 'total_images_created' variable  -->
+      <p>Welcome to your dashboard. You have bookmarked {{ total_images_created }} image{{ total_images_created|pluralize }}. </p> <!--ex: You have bookmarked 12 images,'total_images_created' means the no of images,and it the no is plural then pluralize it -->
+    {% endwith %}
+
+    <!--we also include a link with an href attribute that contains the bookmarklet launcher script,we will include this javascript code from the bookmarklet_launcer.js template -->
+    <p>Drag the following button to your bookmarks toolbar to bookmark images from other websites  <a href="javascript:{% include "bookmarklet_launcher.js" %}" class="button">Bookmark it</a> </p>
+
+    <p>You can also <a href="{% url "edit" %}">edit your profile</a>
+     or <a href="{%url "password_change" %}">change your password</a>.  </p>
+
+{% endblock %}

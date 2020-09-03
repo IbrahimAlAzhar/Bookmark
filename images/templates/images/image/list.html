@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Images bookmarked{% endblock %}
+
+{% block content %}
+    <h1>Images bookmarked</h1>
+    <div id="image-list">
+        {% include "images/image/list_ajax.html" %} <!--to avoid repeating code,we included the list_ajax.html template for displaying images -->
+    </div>
+{% endblock %}
+<!--the list.html template will hold the javascript code for loading additional pages when scrolling to the bottom of the page -->
+<!--this code provides the infinite scroll functionality,we include the js code in the domready block that we defined in the base.html template -->
+{% block domready %}
+ var page = 1;   // stores the current page number
+ var empty_page = false;  // allows us to know whether the user is on the last page and retrieves an empty,as soon as we get an empty page,we will stop sending additional ajax requests because we will assume that there are no more results
+ var block_request = false; // prevents us from sending additional requests while an ajax request is in progress
+ $(window).scroll(function() {  // we use it to capture the scroll event and also to define a handler function for it
+   var margin = $(document).height() - $(window).height() - 200; // we calculate the margin variable to get the difference between the total document height and the window height,because thats the height of the remaining content for the user to scroll.we subtract a value of 200 from the result so that we load the next page when the user is closer than 200 pixels to the bottom of the page
+   if ($(window).scrollTop() > margin && empty_page == false && // we only send an ajax request if no other ajax request is being done(block_request has to be false) and user didn't get to the last page of results (empty_page is also false)
+   block_request == false) {
+    block_request = true;  // we set block_request to true to avoid situation whereby the scroll event triggers additional ajax requests,and increase the page counter by one
+     page += 1;
+     $.get('?page=' + page, function(data) { // we perform an ajax get request and receive the html response in a variable called data
+      if(data == '') {  // if the response has no content we got the end of the results,and there are no more pages to load,we set empty_page to true to prevent additional ajax requests
+         empty_page = true;
+      }
+      else {
+        block_request = false;  // if the response contain data we append the data to the html element with the image-list id,the page content expands vertically appending results when the user approaches the bottom of the page
+        $('#image-list').append(data);
+      }
+    });
+   }
+ });
+{% endblock %}
+
+
+

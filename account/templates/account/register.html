@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Create an account{% endblock %}
+
+{% block content %}
+    <h1>Create an account</h1>
+    <p>Please, sign up using the following form:</p>
+    <form action="." method="post"> <!--you can also set the form action for which views function works in here -->
+        {{ user_form.as_p }} <!--post method is safe because it doesn't shows the username and password on url -->
+        {% csrf_token %}
+        <p> <input type="submit" value="Create my account"> </p>
+
+    </form>
+{% endblock %}

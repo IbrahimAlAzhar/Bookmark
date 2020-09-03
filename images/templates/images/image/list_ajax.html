@@ -1,0 +1,24 @@
+{% load thumbnail %} <!--load the thumbanil for thumbnail type images -->
+
+{% for image in images %} <!--images is pass from view/image_list -->
+    <div class="image">
+        <a href="{{ image.get_absolute_url }}"> <!-- create the link which describe detail view -->
+         {% thumbnail image.image "300x300" crop="100%" as im %} <!--thumbnail image load as im(pixel is 300*300) -->
+         <a href="{{ image.get_absolute_url }}">
+             <img src="{{ im.url }}"> <!--show the u r l of image.image load as im  -->
+         </a>
+       {% endthumbnail %} <!--end the thumbanil image -->
+    </a>
+     <div class="info">
+         <a href="{{ image.get_absolute.url }}" class="title">
+             {{ image.title }}  <!--show the image title with detail view using get_absolute_url method -->
+         </a>
+     </div>
+    </div>
+
+{% endfor %}
+
+
+
+
+

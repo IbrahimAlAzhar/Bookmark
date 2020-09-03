@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ image.title }}{% endblock %}
+
+{% block content %}
+  <h1>{{ image.title }}</h1>
+   <!-- <img src="{{ image.image.url }}" class="image-detail"> --> <!--'image' is pass from views.py file which describe each image,and later 'image' is attribute of the model,show the url format  -->
+    {% load thumbnail %}
+    {% thumbnail image.image "300" as im %} <!--we define a thumbnail with a fixed width of 300 pixels,the first time a user loads this page,a thumbnail image will be created  -->
+     <a href="{{ image.image.url }}">
+         <img src="{{ im.url }}" class="image-detail"> <!--thumbnail image show as a 'im' -->
+     </a>
+    <!--sorl-thumbnail cropping algorithms and different effects that can be applied,if you have any difficulty generating thumbnails you can add THUMBNAIL_DEBUG = True -->
+    {% endthumbnail %}
+
+
+    {% with total_likes=images.users_like.count users_like=image.users_like.all %} <!--we make use of this tag to store the result of the Queryset,counting all user likes in a new variable called total_likes,we added another variable 'users_like' to the template tag in order to store the results of the image.users_like.all query -->
+    <div class="image-info">
+     <div>
+        <span class="count">
+            <span class="total"> {{ total_likes }} </span> <!--we display the total number of users that like this image and include a link to like/unlike the image -->
+            like {{ total_likes|pluralize }} <!--ex: 12 likes -->
+        </span>
+        <a href="#" data-id="{{ image.id }}" data-action="{% if request.user in users_like %}un{% endif %}like" class="like button"> <!--if the current user is in 'users_like' means the user is already liked then show the 'un' option before the 'like',this means after click the 'like' button this button changes to 'unlike'(here acts as a action),the html code below there -->
+            {% if request.user not in users_like %}
+              Like
+            {% else %}
+              Unlike
+            {% endif %}
+        </a>
+     </div>
+     {{ image.description|linebreaks }}
+    </div>
+    <div class="image-likes">
+        {% for user in image.users_like.all %} <!--iterate over all the users who like this image -->
+          <div>
+              <img src="{{ user.profile.photo.url }}"> <!--each user who like the image(using fk relationship),profile is the model of each user(account),photo is the attribute of profile model,and use the url,and the 'user' of Profile model is same as 'user' of Image model  -->
+              <p>{{ user.first_name }}</p>
+          </div>
+        {% empty %}
+          Nobody likes this image yet.
+        {% endfor %}
+    </div>
+    {% endwith %}
+{% endblock %}
+<!--here call the AJAX view,passing the image ID and action parameters to it,AJAX request is successful update the data-action attribute of the <a> HTML element with the opposite action(like/unlike)  -->
+
+{% block domready %}
+    $('a.like').click(function(e){  // use 'a.like' jquery selector to find all elements of the html document with the like class,define a handler function for the click event,this function will be executed every time the user clicks on the like/unlike link
+    e.preventDefault(); // to avoid the default behavior of the 'a' element
+    $.post('{% url "images:like" %}', // use 'post' to perform an asynchronous POST request to the server and later use template tag to build the u r l for ajax request
+    {
+       id: $(this).data('id'), // we build the post parameters dictionary to send in the request,these are the ID and action parameters which is used in html file
+       action: $(this).data('action')
+    },
+    function(data){  // we define a callback function that is executed when the HTTP response is received,it takes a data attribute that contains the content of the response
+    if (data['status'] == 'ok') // we access the status attribute of the data received and check whether it equals ok,if the returned data is as expected,we toggle the data-action attribute of the link and its text
+    {
+      var previous_action = $('a.like').data('action'); // we increase or decrease the total like count by one,depending on the action performed
+      // toggle data-action
+      $('a.like').data('action', previous_action == 'like' ?
+      'unlike' : 'like');
+      // toggle link text
+      $('a.like').text(previous_action == 'like' ? 'Unlike' :
+      'Like');
+      // update total likes
+      var previous_likes = parseInt($('span.count .total').text());
+      $('span.count .total').text(previous_action == 'like' ?
+      previous_likes + 1 : previous_likes - 1);
+    }
+   }
+  );
+});
+{% endblock %}

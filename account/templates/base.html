@@ -1,0 +1,86 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link href="{% static "css/base.css" %}" rel="stylesheet">
+</head>
+<body>
+   <div id ="header">
+       <span class="logo" >Bookmarks</span>
+       {% if request.user.is_authenticated %}
+        <ul class="menu">
+            <li {% if section == "dashboard" %}class="selected"{% endif %}>
+               <a href="{% url "dashboard" %}">My dashboard</a>
+            </li>
+
+            <li {% if section == "images" %}class="selected"{% endif %}>
+                <a href="{% url "images:list" %}">Images</a> <!--the namespace is 'images' we set bookmarks_main\urls.py file -->
+            </li>
+
+            <li {% if section == "people" %}class="selected"{% endif %}>
+                <a href="#">People</a>
+            </li>
+        </ul>
+       {% endif %}
+
+       <span class="user">
+           {% if request.user.is_authenticated %}
+             Hello {{ request.user.first_name }},
+             <a href="{% url "logout" %}">Logout</a>
+           {% else %}
+             <a href="{% url "login" %}">Log-in</a>
+           {% endif %}
+       </span>
+   </div>
+
+   {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">
+              {{ message | safe }}
+                <a href="#" class="close">x</a>
+            </li>
+        {% endfor %}
+    </ul>
+   {% endif %}
+
+    <div id="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+<!--here using ajax and jquery in script,ajax is using for when you like an image then the like number automatically increment without loading the page -->
+<!--we load the jQuery framework from google's CDN and add it to the static directory of your application -->
+   <script>
+    src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js">
+   </script>
+<!--in this script we using block content and endblock for that reason all others template can use it -->
+<!--inside the script tag the first line is jquery function that takes a handler that is executed when the DOM(document object model) hierarchy has been fully constructed,DOM is created by the browser when a web page is loaded,
+  including our code inside the function,we will make sure that all html elements we are going to interact with are loaded in the DOM,our code will only be executed once the DOM is ready.we created a template block called domready,in which templates that extend the base template will be able to include specific js-->
+   <script src="https://cdn.jsdeliver.net/npm/js-cookie@2/src/js.cookie.min.js">
+   </script> <!--load the js cookie plugin from a public CDN so that we can easily interact with cookies,it is lightweight js  -->
+
+   <script>
+   // this setup will apply to all AJAX requests performed with jQuery
+    var csrftoken = Cookies.get('csrftoken'); // read the value of csrftoken cookie with Cookies.get()
+    function csrfSafeMethod(method) { // define the function to check whether an HTTP method is safe,safe methods don't require csrf protection(GET,HEAD,OPTIONS,TRACE)
+        // these HTTP methods do not require CSRF protection
+      return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({  // set up jQuery ajax request using $.ajaxSetup()
+      beforeSend: function(xhr, settings) { // before each ajax request is performed,we check whether the request method is safe and the current request is not cross-domain
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);  // if the request is unsafe,we set the X-CSRFToken header with the value obtained from the cookie
+        }
+      }
+    });
+
+    $(document).ready(function(){
+      {% block domready %}
+      {% endblock %}
+    });
+   </script>
+
+</body>
+</html>
